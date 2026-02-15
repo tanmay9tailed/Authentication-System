@@ -112,9 +112,15 @@ export const login = async (req, res) => {
 
 export const resendOtp = async (req, res) => {
   try {
-    const { userId } = req.body;
+    const { userId, email } = req.body;
 
-    const user = await User.findById(userId);
+    let user;
+
+    if (userId) {
+      user = await User.findById(userId);
+    } else if (email) {
+      user = await User.findOne({ email });
+    }
 
     if (!user) {
       return res.status(400).json({ message: "User not found" });
@@ -138,6 +144,7 @@ export const resendOtp = async (req, res) => {
 
     res.status(200).json({
       message: "OTP resent successfully",
+      token: generateToken(user)
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
