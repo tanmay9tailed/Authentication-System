@@ -19,6 +19,8 @@ import nodemailer from "nodemailer";
 
 // const accessToken = await oauth2Client.getAccessToken();
 
+console.log(process.env.EMAIL_USER, process.env.EMAIL_PASS);
+
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
@@ -74,16 +76,7 @@ export const signup = async (req, res) => {
       otpExpire: generateDate(),
     });
 
-    // const transporter = nodemailer.createTransport({
-    //   host: "smtp.ethereal.email",
-    //   port: 587,
-    //   auth: {
-    //     user: "julius.daniel@ethereal.email",
-    //     pass: "wBe3BRGB3zGrBXusmk",
-    //   },
-    // });
-
-    const mail = async () => {
+    try {
       const info = await transporter.sendMail({
         from: '"Auth System" <no-reply@auth.com>',
         to: email,
@@ -93,9 +86,10 @@ export const signup = async (req, res) => {
       });
       console.log("Message sent:", info.messageId);
       console.log("Preview URL:", nodemailer.getTestMessageUrl(info));
-    };
+    } catch (error) {
+      console.log("Mail error", error);
+    }
 
-    await mail();
     res.status(201).json({
       message: "Signup successful",
       token: generateToken(user),
@@ -149,20 +143,23 @@ export const resendOtp = async (req, res) => {
     user.otpExpire = generateDate();
     await user.save();
 
-    const info = await transporter.sendMail({
-      from: '"Auth System" <no-reply@auth.com>',
-      to: user.email,
-      subject: "Resend OTP",
-      text: `Your new OTP is ${otp}. Expires in 10 minutes`,
-      html: `<h2>Your new OTP: ${otp}</h2>`,
-    });
-
-    console.log("Message sent:", info.messageId);
-    console.log("Preview URL:", nodemailer.getTestMessageUrl(info));
+    try {
+      const info = await transporter.sendMail({
+        from: '"Auth System" <no-reply@auth.com>',
+        to: user.email,
+        subject: "Resend OTP",
+        text: `Your new OTP is ${otp}. Expires in 10 minutes`,
+        html: `<h2>Your new OTP: ${otp}</h2>`,
+      });
+      console.log("Message sent:", info.messageId);
+      console.log("Preview URL:", nodemailer.getTestMessageUrl(info));
+    } catch (error) {
+      console.log("Mail error", error);
+    }
 
     res.status(200).json({
       message: "OTP resent successfully",
-      token: generateToken(user)
+      token: generateToken(user),
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
