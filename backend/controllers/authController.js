@@ -49,6 +49,7 @@ const generateDate = () => {
 
 export const signup = async (req, res) => {
   try {
+    console.log("started")
     const { name, email, password } = req.body;
 
     if (!validator.isEmail(email)) {
@@ -75,8 +76,10 @@ export const signup = async (req, res) => {
       otp,
       otpExpire: generateDate(),
     });
-
+    console.log("user created")
+    
     try {
+      console.log("mail")
       const info = await transporter.sendMail({
         from: '"Auth System" <no-reply@auth.com>',
         to: email,
