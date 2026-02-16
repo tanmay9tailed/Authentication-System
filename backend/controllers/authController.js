@@ -19,21 +19,29 @@ import nodemailer from "nodemailer";
 
 // const accessToken = await oauth2Client.getAccessToken();
 
-console.log(process.env.EMAIL_USER, process.env.EMAIL_PASS);
+// const transporter = nodemailer.createTransport({
+//   service: "gmail",
+//   auth: {
+//     type: "OAUTH2",
+//     user: process.env.EMAIL_USER,
+//     clientId: process.env.CLIENT_ID,
+//     clientSecret: process.env.CLIENT_SECRET,
+//     refreshToken: process.env.REFRESH_TOKEN,
+//     accessToken: accessToken.token,
+//   },
+// });
 
 const transporter = nodemailer.createTransport({
-  service: "gmail",
+  host: "smtp.gmail.com",
+  port: 587,
+  secure: false,
+  family: 4,
   auth: {
-    // type: "OAUTH2",
-    // user: process.env.EMAIL_USER,
-    // clientId: process.env.CLIENT_ID,
-    // clientSecret: process.env.CLIENT_SECRET,
-    // refreshToken: process.env.REFRESH_TOKEN,
-    // accessToken: accessToken.token,
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
 });
+
 
 const generateToken = (user) => {
   return jwt.sign({ id: user._id }, process.env.JWT_SECRET);
