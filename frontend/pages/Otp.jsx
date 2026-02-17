@@ -3,6 +3,8 @@ import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import API from "../services/api";
+import { useDispatch } from "react-redux";
+import { login } from "../context/userSlice";
 
 export default function Otp() {
   const {
@@ -14,6 +16,7 @@ export default function Otp() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
+  const dispatch = useDispatch();
 
   const onSubmit = async (data) => {
     try {
@@ -24,6 +27,7 @@ export default function Otp() {
       });
 
       if (res.data.message === "Account verified successfully") {
+        dispatch(login({name: res.data.name, email: res.data.email}))
         toast.success(res.data.message || "OTP Verified");
         navigate("/dashboard");
       } else {

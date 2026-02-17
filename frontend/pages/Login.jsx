@@ -3,6 +3,8 @@ import { useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import API from "../services/api";
+import { useDispatch } from "react-redux";
+import { login } from "../context/userSlice";
 
 export default function Login() {
   const {
@@ -16,6 +18,7 @@ export default function Login() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [otpLoading, setOtpLoading] = useState(false);
+  const dispatch = useDispatch();
 
   const onSubmit = async (data) => {
     try {
@@ -23,6 +26,7 @@ export default function Login() {
       const res = await API.post("/auth/login", data);
       toast.success(res.data.message || "Login successful");
       navigate("/dashboard");
+      dispatch(login({ name: res.data.name, email: data.email}));
     } catch (err) {
       toast.error(err.response?.data?.message || "Login failed");
     } finally {
