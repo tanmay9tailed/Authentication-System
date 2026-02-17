@@ -3,7 +3,6 @@ import { useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import API from "../services/api";
-import { jwtDecode } from "jwt-decode";
 
 export default function Login() {
   const {
@@ -23,7 +22,6 @@ export default function Login() {
       setLoading(true);
       const res = await API.post("/auth/login", data);
       toast.success(res.data.message || "Login successful");
-      localStorage.setItem("token", res.data.token)
       navigate("/dashboard");
     } catch (err) {
       toast.error(err.response?.data?.message || "Login failed");
@@ -49,7 +47,6 @@ export default function Login() {
       });
 
       toast.success(res.data.message || "OTP resent");
-      localStorage.setItem("token", res.data.token)
       navigate("/otp");
     } finally {
       setOtpLoading(false);

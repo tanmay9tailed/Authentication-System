@@ -19,10 +19,9 @@ export default function Signup() {
       setLoading(true);
       const res = await API.post("/auth/signup", data);
       toast.success(res.data.message || "Account created");
-      localStorage.setItem("token", res.data.token)
       navigate("/otp");
     } catch (err) {
-      console.log(err)
+      console.error(err.response?.data?.message);
       toast.error(err.response?.data?.message || "Signup failed");
     } finally {
       setLoading(false);
@@ -104,7 +103,7 @@ export default function Signup() {
 
         <p className="text-center mt-4 text-sm">
           Already have an account?{" "}
-          <Link to="/login" className="text-blue-500">
+          <Link to="/" className="text-blue-500">
             Login
           </Link>
         </p>

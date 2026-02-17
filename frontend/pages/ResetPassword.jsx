@@ -1,20 +1,20 @@
 import React from "react";
 import { useForm } from "react-hook-form";
-import { useParams, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import API from "../services/api";
 
 export default function ResetPassword() {
-  const { token } = useParams();
   const navigate = useNavigate();
   const { register, handleSubmit, watch, formState: { errors } } = useForm();
 
   const onSubmit = async (data) => {
     try {
-      const res = await API.post(`/auth/reset-password/${token}`, data);
+      const res = await API.post(`/auth/reset-password`, data);
       toast.success(res.data.message || "Password reset successful");
       navigate("/");
     } catch (err) {
+      console.error(err.response?.data?.message);
       toast.error(err.response?.data?.message || "Reset failed");
     }
   };
@@ -58,7 +58,7 @@ export default function ResetPassword() {
             )}
           </div>
 
-          <button className="w-full bg-blue-600 text-white py-2 rounded-lg">
+          <button type="submit" className="w-full bg-blue-600 text-white py-2 rounded-lg">
             Reset Password
           </button>
         </form>

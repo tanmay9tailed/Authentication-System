@@ -24,6 +24,7 @@ const userSchema = new mongoose.Schema(
 
     otp: Number,
     otpExpire: Date,
+    resetLinkExpire: Date,
   },
   {
     timestamps: true,

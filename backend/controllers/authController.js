@@ -19,30 +19,29 @@ import nodemailer from "nodemailer";
 
 // const accessToken = await oauth2Client.getAccessToken();
 
-// const transporter = nodemailer.createTransport({
-//   service: "gmail",
-//   auth: {
-//     type: "OAUTH2",
-//     user: process.env.EMAIL_USER,
-//     clientId: process.env.CLIENT_ID,
-//     clientSecret: process.env.CLIENT_SECRET,
-//     refreshToken: process.env.REFRESH_TOKEN,
-//     accessToken: accessToken.token,
-//   },
-// });
-
 const transporter = nodemailer.createTransport({
-  host: "74.125.140.108",
-  port: 587,
-  secure: false,
+  service: "gmail",
   auth: {
+    type: "OAUTH2",
     user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
+    clientId: process.env.CLIENT_ID,
+    clientSecret: process.env.CLIENT_SECRET,
+    refreshToken: process.env.REFRESH_TOKEN,
+    // accessToken: accessToken.token,
   },
 });
 
+// const transporter = nodemailer.createTransport({
+//   host: "74.125.140.108",
+//   port: 587,
+//   secure: false,
+//   auth: {
+//     user: process.env.EMAIL_USER,
+//     pass: process.env.EMAIL_PASS,
+//   },
+// });
 
-const generateToken = (user) => {
+export const generateToken = (user) => {
   return jwt.sign({ id: user._id }, process.env.JWT_SECRET);
 };
 
@@ -56,7 +55,6 @@ const generateDate = () => {
 
 export const signup = async (req, res) => {
   try {
-    console.log("started")
     const { name, email, password } = req.body;
 
     if (!validator.isEmail(email)) {
@@ -83,10 +81,8 @@ export const signup = async (req, res) => {
       otp,
       otpExpire: generateDate(),
     });
-    console.log("user created")
-    
+
     try {
-      console.log("mail")
       const info = await transporter.sendMail({
         from: '"Auth System" <no-reply@auth.com>',
         to: email,
@@ -95,14 +91,20 @@ export const signup = async (req, res) => {
         html: ` <p>${otp}</p>`,
       });
       console.log("Message sent:", info.messageId);
-      console.log("Preview URL:", nodemailer.getTestMessageUrl(info));
+      // console.log("Preview URL:", nodemailer.getTestMessageUrl(info));
     } catch (error) {
       console.log("Mail error", error);
     }
 
+    const token = generateToken(user);
+
+    res.cookie("token", token, {
+      httpOnly: true,
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
     res.status(201).json({
       message: "Signup successful",
-      token: generateToken(user),
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -123,10 +125,22 @@ export const login = async (req, res) => {
       return res.status(400).json({ message: "Invalid password" });
     }
 
-    res.json({
-      message: "Login successful",
-      token: generateToken(user),
-    });
+    if (user.isVerified) {
+      const token = generateToken(user);
+
+      res.cookie("token", token, {
+        httpOnly: true,
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+      });
+
+      res.json({
+        message: "Login successful",
+      });
+    } else {
+      res.status(400).json({
+        message: "User not verified. Login using otp",
+      });
+    }
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -134,7 +148,14 @@ export const login = async (req, res) => {
 
 export const resendOtp = async (req, res) => {
   try {
-    const { userId, email } = req.body;
+    const { email } = req.body;
+
+    let token = req.cookies.token;
+
+    let userId = undefined;
+    if (token) {
+      userId = jwt.verify(token, process.env.JWT_SECRET).userId;
+    }
 
     let user;
 
@@ -162,14 +183,19 @@ export const resendOtp = async (req, res) => {
         html: `<h2>Your new OTP: ${otp}</h2>`,
       });
       console.log("Message sent:", info.messageId);
-      console.log("Preview URL:", nodemailer.getTestMessageUrl(info));
     } catch (error) {
       console.log("Mail error", error);
     }
 
+    token = generateToken(user);
+
+    res.cookie("token", token, {
+      httpOnly: true,
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
     res.status(200).json({
       message: "OTP resent successfully",
-      token: generateToken(user),
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -178,7 +204,9 @@ export const resendOtp = async (req, res) => {
 
 export const verifyOtp = async (req, res) => {
   try {
-    const { userId, otp } = req.body;
+    const { otp } = req.body;
+
+    const userId = req.userId
 
     const user = await User.findById(userId);
 
@@ -210,35 +238,63 @@ export const forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
 
-    const user = await User.findById(email);
+    const user = await User.findOne({ email });
 
     if (!user) {
       return res.status(400).json({ message: "user does't exists" });
     }
 
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        type: "OAUTH2",
-        user: process.env.EMAIL_USER,
-        clientId: process.env.CLIENT_ID,
-        clientSecret: process.env.CLIENT_SECRET,
-        refreshToken: process.env.REFRESH_TOKEN,
-      },
+    const info = await transporter.sendMail({
+      from: '"Auth System" <no-reply@auth.com>',
+      to: user.email,
+      subject: "Password Reset Link",
+      text: `Your link http://localhost:5173/reset-password`,
+      html: `<h2>Your link: <a href="http://localhost:5173/reset-password">click here</a></h2> <h3>Expire in 10 mins.</h3>`,
     });
 
-    // const info = await transporter.sendMail({
-    //   from: '"Auth System" <no-reply@auth.com>',
-    //   to: user.email,
-    //   subject: "Password Reset Link",
-    //   text: `Your link http://localhost:5173/reset-password`,
-    //   html: `<h2>Your link: <Link to="http://localhost:5173/reset-password">click here</Link></h2>`,
-    // });
+    user.resetLinkExpire = generateDate();
+    await user.save();
 
     console.log("Message sent:", info.messageId);
-    console.log("Preview URL:", nodemailer.getTestMessageUrl(info));
+
+    const token = generateToken(user)
+
+    res.cookie("token", token, {
+      httpOnly: true,
+      maxAge: 7*24*60*60*1000
+    })
 
     res.status(200).json({ message: "reset link sent" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const resetPassword = async (req, res) => {
+  try {
+    const { password, confirmPassword } = req.body;
+
+    if (password !== confirmPassword) {
+      return res.status(400).json({ message: "passwords are not same" });
+    }
+
+    const userId = req.userId
+
+    const user = await User.findById(userId);
+
+    if (user.resetLinkExpire < new Date()) {
+      return res.status(400).json({ message: "link expired" });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    user.password = hashedPassword;
+    user.resetLinkExpire = undefined;
+
+    await user.save();
+
+    res.status(200).json({ message: "Password reset successful" });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

@@ -1,9 +1,8 @@
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
-import { jwtDecode } from "jwt-decode";
 import { useNavigate } from "react-router-dom";
-import API from "../services/api"; // FIXED import
+import API from "../services/api";
 
 export default function Otp() {
   const {
@@ -20,11 +19,7 @@ export default function Otp() {
     try {
       setLoading(true);
 
-      const token = localStorage.getItem("token");
-      const decoded = jwtDecode(token);
-
       const res = await API.post("/auth/verify-otp", {
-        userId: decoded.id,
         otp: data.otp,
       });
 
@@ -45,12 +40,7 @@ export default function Otp() {
     try {
       setResendLoading(true);
 
-      const token = localStorage.getItem("token");
-      const decoded = jwtDecode(token);
-
-      const res = await API.post("/auth/resend-otp", {
-        userId: decoded.id,
-      });
+      const res = await API.post("/auth/resend-otp");
 
       toast.success(res.data.message || "OTP resent");
     } catch (err) {
