@@ -135,6 +135,7 @@ export const login = async (req, res) => {
 
       res.json({
         message: "Login successful",
+        name: user.name,
       });
     } else {
       res.status(400).json({
@@ -206,7 +207,7 @@ export const verifyOtp = async (req, res) => {
   try {
     const { otp } = req.body;
 
-    const userId = req.userId
+    const userId = req.userId;
 
     const user = await User.findById(userId);
 
@@ -228,7 +229,9 @@ export const verifyOtp = async (req, res) => {
 
     await user.save();
 
-    res.status(200).json({ message: "Account verified successfully" });
+    res
+      .status(200)
+      .json({ message: "Account verified successfully", name: user.name, email: user.email });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -257,12 +260,12 @@ export const forgotPassword = async (req, res) => {
 
     console.log("Message sent:", info.messageId);
 
-    const token = generateToken(user)
+    const token = generateToken(user);
 
     res.cookie("token", token, {
       httpOnly: true,
-      maxAge: 7*24*60*60*1000
-    })
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
 
     res.status(200).json({ message: "reset link sent" });
   } catch (error) {
@@ -278,7 +281,7 @@ export const resetPassword = async (req, res) => {
       return res.status(400).json({ message: "passwords are not same" });
     }
 
-    const userId = req.userId
+    const userId = req.userId;
 
     const user = await User.findById(userId);
 
@@ -295,6 +298,21 @@ export const resetPassword = async (req, res) => {
     await user.save();
 
     res.status(200).json({ message: "Password reset successful" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const check = async (req, res) => {
+  try {
+    const token = req.cookies.token;
+
+    res.cookie("token", token, {
+      httpOnly: true,
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    return res.status(200).json({ message: "User Logged", loggedIn: true });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
