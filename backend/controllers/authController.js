@@ -257,8 +257,8 @@ export const forgotPassword = async (req, res) => {
       from: '"Auth System" <no-reply@auth.com>',
       to: user.email,
       subject: "Password Reset Link",
-      text: `Your link http://localhost:5173/reset-password`,
-      html: `<h2>Your link: <a href="http://localhost:5173/reset-password">click here</a></h2> <h3>Expire in 10 mins.</h3>`,
+      text: `Your link https://impacts-weapon-communicate-helicopter.trycloudflare.com/reset-password`,
+      html: `<h2>Your link: <a href="https://impacts-weapon-communicate-helicopter.trycloudflare.com/reset-password">click here</a></h2> <h3>Expire in 10 mins.</h3>`,
     });
 
     user.resetLinkExpire = generateDate();

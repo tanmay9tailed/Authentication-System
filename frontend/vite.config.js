@@ -5,4 +5,10 @@ export default defineConfig({
   plugins: [
     tailwindcss(),
   ],
+  server: {
+    host: true,
+    allowedHosts: [
+      'impacts-weapon-communicate-helicopter.trycloudflare.com'
+    ]
+  }
 })

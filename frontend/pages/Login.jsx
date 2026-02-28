@@ -52,6 +52,8 @@ export default function Login() {
 
       toast.success(res.data.message || "OTP resent");
       navigate("/otp");
+    }catch(err){
+      toast.error(err.response?.data?.message || "Invalid email");
     } finally {
       setOtpLoading(false);
     }
